@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -21,6 +22,14 @@ func DownloadJSON(u *url.URL) (string, error) {
 		return "", err
 	}
 	defer response.Body.Close()
+
+	if response.StatusCode < 200 || response.StatusCode >= 400 {
+		return "", fmt.Errorf("remote replied with %s", http.StatusText(response.StatusCode))
+	}
+
+	if response.Header.Get("Content-Type") != "application/json" {
+		return "", fmt.Errorf("content-type is not application/json")
+	}
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
