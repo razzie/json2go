@@ -31,7 +31,7 @@ func generateFields(structDef string, data map[string]interface{}) string {
 		fieldName := ToCamelCase(key)
 		switch v := value.(type) {
 		case map[string]interface{}:
-			structDef += fmt.Sprintf("\t%s []%s `json:\"%s\"`\n", fieldName, generateStructFromMap(v), key)
+			structDef += fmt.Sprintf("\t%s %s `json:\"%s\"`\n", fieldName, generateStructFromMap(v), key)
 		case []interface{}:
 			if len(v) > 0 {
 				// Handle non-empty slices
