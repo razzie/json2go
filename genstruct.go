@@ -15,7 +15,7 @@ func GenerateStruct(jsonStr string, structName string) (string, error) {
 	}
 
 	structDef := fmt.Sprintf("type %s struct {\n", structName)
-	structDef = generateFields(structDef, data, "")
+	structDef = generateFields(structDef, data)
 	structDef += "}\n"
 
 	formattedDef, err := format.Source([]byte(structDef))
@@ -26,13 +26,12 @@ func GenerateStruct(jsonStr string, structName string) (string, error) {
 	return string(formattedDef), nil
 }
 
-func generateFields(structDef string, data map[string]interface{}, prefix string) string {
+func generateFields(structDef string, data map[string]interface{}) string {
 	for key, value := range data {
-		fieldName := fmt.Sprintf("%s%s", prefix, key)
-		fieldName = ToCamelCase(fieldName)
+		fieldName := ToCamelCase(key)
 		switch v := value.(type) {
 		case map[string]interface{}:
-			structDef = generateFields(structDef, v, fieldName+"_")
+			structDef += fmt.Sprintf("\t%s []%s `json:\"%s\"`\n", fieldName, generateStructFromMap(v), key)
 		case []interface{}:
 			if len(v) > 0 {
 				// Handle non-empty slices
@@ -59,7 +58,7 @@ func generateFields(structDef string, data map[string]interface{}, prefix string
 func generateStructFromMap(data map[string]interface{}) string {
 	// Helper function to generate a struct from a map
 	structDef := "struct {\n"
-	structDef = generateFields(structDef, data, "")
+	structDef = generateFields(structDef, data)
 	structDef += "}"
 	return structDef
 }
