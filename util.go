@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -64,35 +64,35 @@ func ToCamelCase(name string) string {
 	return strings.Join(parts, "")
 }
 
-func DownloadJSON(u *url.URL) (string, error) {
+func DownloadJSON(u *url.URL) (map[string]interface{}, error) {
 	ips, err := net.LookupIP(GetHost(u))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	for _, ip := range ips {
 		if IsPrivateIP(ip) {
-			return "", fmt.Errorf("access to private networks is restricted")
+			return nil, fmt.Errorf("access to private networks is restricted")
 		}
 	}
 
 	response, err := http.Get(u.String())
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode < 200 || response.StatusCode >= 400 {
-		return "", fmt.Errorf("remote replied with %s", http.StatusText(response.StatusCode))
+		return nil, fmt.Errorf("remote replied with %s", http.StatusText(response.StatusCode))
 	}
 
 	if response.Header.Get("Content-Type") != "application/json" {
-		return "", fmt.Errorf("content-type is not application/json")
+		return nil, fmt.Errorf("content-type is not application/json")
 	}
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return "", err
+	var data map[string]interface{}
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&data); err != nil {
+		return nil, err
 	}
-
-	return string(body), nil
+	return data, nil
 }

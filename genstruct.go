@@ -1,19 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"go/format"
 )
 
-func GenerateStruct(jsonStr string, structName string) (string, error) {
-	var data map[string]interface{}
-
-	err := json.Unmarshal([]byte(jsonStr), &data)
-	if err != nil {
-		return "", err
-	}
-
+func GenerateStruct(data map[string]interface{}, structName string) (string, error) {
 	structDef := fmt.Sprintf("type %s struct {\n", structName)
 	structDef = generateFields(structDef, data)
 	structDef += "}\n"
