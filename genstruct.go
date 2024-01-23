@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go/format"
+	"sort"
 )
 
 func GenerateStruct(data map[string]interface{}, structName string) (string, error) {
@@ -19,9 +20,14 @@ func GenerateStruct(data map[string]interface{}, structName string) (string, err
 }
 
 func generateFields(structDef string, data map[string]interface{}) string {
-	for key, value := range data {
+	keys := make([]string, 0, len(data))
+	for key := range data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
 		fieldName := ToCamelCase(key)
-		switch v := value.(type) {
+		switch v := data[key].(type) {
 		case map[string]interface{}:
 			structDef += fmt.Sprintf("\t%s %s `json:\"%s\"`\n", fieldName, generateStructFromMap(v), key)
 		case []interface{}:
@@ -40,7 +46,7 @@ func generateFields(structDef string, data map[string]interface{}) string {
 				structDef += fmt.Sprintf("\t%s []interface{} `json:\"%s\"`\n", fieldName, key)
 			}
 		default:
-			goType := getGoType(value)
+			goType := getGoType(v)
 			structDef += fmt.Sprintf("\t%s %s `json:\"%s\"`\n", fieldName, goType, key)
 		}
 	}
