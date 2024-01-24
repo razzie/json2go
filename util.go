@@ -1,12 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
+	"unicode"
+
+	"github.com/goccy/go-json"
 )
 
 func getPrivateIPBlocks() (blocks []*net.IPNet) {

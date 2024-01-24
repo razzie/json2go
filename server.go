@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 
 	"github.com/alecthomas/chroma/quick"
+	"github.com/goccy/go-json"
 )
 
 var form = `
