@@ -59,9 +59,20 @@ func GetHost(u *url.URL) string {
 }
 
 func ToCamelCase(name string) string {
+	name = strings.ReplaceAll(name, "-", "_")
 	parts := strings.Split(name, "_")
 	for i, part := range parts {
-		parts[i] = strings.Title(part)
+		runes := make([]rune, 0, len(part))
+		for _, r := range part {
+			if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+				continue
+			}
+			runes = append(runes, r)
+		}
+		if len(runes) > 0 {
+			runes[0] = unicode.ToUpper(runes[0])
+		}
+		parts[i] = string(runes)
 	}
 	return strings.Join(parts, "")
 }
