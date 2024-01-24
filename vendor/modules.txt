@@ -49,3 +49,6 @@ github.com/goccy/go-json/internal/encoder/vm_color_indent
 github.com/goccy/go-json/internal/encoder/vm_indent
 github.com/goccy/go-json/internal/errors
 github.com/goccy/go-json/internal/runtime
+# github.com/goccy/go-reflect v1.2.0
+## explicit; go 1.12
+github.com/goccy/go-reflect

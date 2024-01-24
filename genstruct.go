@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"go/format"
+	"math"
 	"sort"
+
+	"github.com/goccy/go-reflect"
 )
 
 func GenerateStruct(data map[string]interface{}, structName string) (string, error) {
@@ -62,22 +65,38 @@ func generateStructFromMap(data map[string]interface{}) string {
 }
 
 func getGoType(value interface{}) string {
-	switch value.(type) {
-	case float64:
-		return "float64"
-	case float32:
-		return "float32"
-	case int:
-		return "int"
-	case int32:
-		return "int32"
-	case int64:
-		return "int64"
-	case bool:
-		return "bool"
-	case string:
-		return "string"
-	default:
+	if value == nil {
 		return "interface{}"
 	}
+	if value, ok := value.(float64); ok {
+		return inferGoNumericType(value)
+	}
+	typ := reflect.TypeOf(value)
+	tname := typ.Name()
+	if len(tname) == 0 {
+		return "interface{}"
+	}
+	return tname
+}
+
+func inferGoNumericType(value float64) string {
+	if value != math.Floor(value) {
+		return "float64"
+	}
+
+	if value >= math.MinInt && value <= math.MaxInt {
+		return "int"
+	}
+
+	if value >= 0 {
+		if value <= math.MaxUint64 {
+			return "uint64"
+		}
+	} else {
+		if value >= math.MinInt64 {
+			return "int64"
+		}
+	}
+
+	return "float64"
 }
