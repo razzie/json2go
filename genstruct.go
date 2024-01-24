@@ -57,7 +57,9 @@ func generateFields(structDef string, data map[string]interface{}) string {
 }
 
 func generateStructFromMap(data map[string]interface{}) string {
-	// Helper function to generate a struct from a map
+	if len(data) == 0 {
+		return "map[string]interface{}"
+	}
 	structDef := "struct {\n"
 	structDef = generateFields(structDef, data)
 	structDef += "}"
