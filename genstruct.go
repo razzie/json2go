@@ -1,28 +1,32 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"go/format"
+	"io"
 	"math"
 	"sort"
+	"strings"
 
 	"github.com/goccy/go-reflect"
 )
 
 func GenerateStruct(data map[string]interface{}, structName string) (string, error) {
-	structDef := fmt.Sprintf("type %s struct {\n", structName)
-	structDef = generateFields(structDef, data)
-	structDef += "}\n"
+	var structDef bytes.Buffer
+	fmt.Fprintf(&structDef, "type %s struct {\n", structName)
+	generateFields(&structDef, data)
+	structDef.WriteString("}\n")
 
-	formattedDef, err := format.Source([]byte(structDef))
+	formattedDef, err := format.Source(structDef.Bytes())
 	if err != nil {
-		return structDef, err
+		return structDef.String(), err
 	}
 
 	return string(formattedDef), nil
 }
 
-func generateFields(structDef string, data map[string]interface{}) string {
+func generateFields(w io.Writer, data map[string]interface{}) {
 	keys := make([]string, 0, len(data))
 	for key := range data {
 		keys = append(keys, key)
@@ -32,38 +36,36 @@ func generateFields(structDef string, data map[string]interface{}) string {
 		fieldName := ToCamelCase(key)
 		switch v := data[key].(type) {
 		case map[string]interface{}:
-			structDef += fmt.Sprintf("\t%s %s `json:\"%s\"`\n", fieldName, generateStructFromMap(v), key)
+			fmt.Fprintf(w, "%s %s `json:\"%s\"`\n", fieldName, generateStruct(v), key)
 		case []interface{}:
-			if len(v) > 0 {
-				// Handle non-empty slices
-				switch e := v[0].(type) {
-				case map[string]interface{}:
-					// Nested slice of maps
-					structDef += fmt.Sprintf("\t%s []%s `json:\"%s\"`\n", fieldName, generateStructFromMap(e), key)
-				default:
-					goType := getGoType(e)
-					structDef += fmt.Sprintf("\t%s []%s `json:\"%s\"`\n", fieldName, goType, key)
-				}
-			} else {
-				// Handle empty slices
-				structDef += fmt.Sprintf("\t%s []interface{} `json:\"%s\"`\n", fieldName, key)
-			}
+			fmt.Fprintf(w, "%s %s `json:\"%s\"`\n", fieldName, generateSlice(v), key)
 		default:
-			goType := getGoType(v)
-			structDef += fmt.Sprintf("\t%s %s `json:\"%s\"`\n", fieldName, goType, key)
+			fmt.Fprintf(w, "%s %s `json:\"%s\"`\n", fieldName, getGoType(v), key)
 		}
 	}
-	return structDef
 }
 
-func generateStructFromMap(data map[string]interface{}) string {
+func generateStruct(data map[string]interface{}) string {
 	if len(data) == 0 {
 		return "map[string]interface{}"
 	}
-	structDef := "struct {\n"
-	structDef = generateFields(structDef, data)
-	structDef += "}"
-	return structDef
+	var structDef strings.Builder
+	structDef.WriteString("struct {\n")
+	generateFields(&structDef, data)
+	structDef.WriteString("}")
+	return structDef.String()
+}
+
+func generateSlice(data []interface{}) string {
+	if len(data) == 0 {
+		return "[]interface{}"
+	}
+	switch v := data[0].(type) {
+	case map[string]interface{}:
+		return "[]" + generateStruct(v)
+	default:
+		return "[]" + getGoType(v)
+	}
 }
 
 func getGoType(value interface{}) string {
