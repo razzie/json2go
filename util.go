@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"mime"
 	"net"
 	"net/http"
 	"net/url"
@@ -98,7 +99,11 @@ func DownloadJSON(u *url.URL) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("remote replied with %s", http.StatusText(response.StatusCode))
 	}
 
-	if response.Header.Get("Content-Type") != "application/json" {
+	contentType, _, err := mime.ParseMediaType(response.Header.Get("Content-Type"))
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse content-type: %v", err)
+	}
+	if contentType != "application/json" {
 		return nil, fmt.Errorf("content-type is not application/json")
 	}
 
