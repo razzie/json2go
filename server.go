@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -40,11 +41,10 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		structDef, err := GenerateStruct(data, "Generated")
-		if err != nil {
-			http.Error(w, "Failed to generate Go struct: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
 		w.Header().Set("Content-Type", "text/html")
+		for ; err != nil; err = errors.Unwrap(err) {
+			w.Write([]byte("<p>" + err.Error() + "</p>"))
+		}
 		quick.Highlight(w, structDef, "go", "html", "vs")
 	}
 
