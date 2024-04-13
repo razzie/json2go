@@ -60,6 +60,12 @@ func GetHost(u *url.URL) string {
 }
 
 func ToCamelCase(name string) string {
+	if len(name) == 0 {
+		return "X"
+	}
+	if unicode.IsDigit([]rune(name)[0]) {
+		name = "X" + name
+	}
 	name = strings.ReplaceAll(name, "-", "_")
 	parts := strings.Split(name, "_")
 	for i, part := range parts {
